@@ -8,6 +8,8 @@ import BottomBtn from './components/BottomBtn'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus,faFileImport } from '@fortawesome/free-solid-svg-icons'
 import TabList from './components/TabList'
+import SimpleMDE from 'react-simplemde-editor'
+import "easymde/dist/easymde.min.css";
 
 function App() {
   return (
@@ -31,7 +33,22 @@ function App() {
           </div>
         </div>
         <div className="col-9 right-panel">
-          <TabList files={ defaultFiles } activeId="1" onTabClick={ (id)=>{ console.log('tab click',id)  } } />
+          <TabList 
+            files={ defaultFiles } 
+            activeId="1" 
+            unsaveIds={ [ "1","2"] }
+            onTabClick={ (id)=>{ console.log('tab click',id)  } }
+            onCloseTab={ (id)=> { console.log('tab close',id) } } 
+          />
+          <SimpleMDE 
+            value={ defaultFiles[1].body }
+            onChange={ (value) => { console.log(value) } }
+            options={
+              {
+                minHeight: '515px'
+              }
+            }
+          />
         </div>
       </div>
     </div>
