@@ -12,11 +12,14 @@ const FileList = ( { files, onFileClick, onSaveEdit, onFileDelete }) => {
     const enterPressed = useKeyPress(13)
     const escPressed = useKeyPress(27)
 
-    const closeEdit = () => {
+    const closeEdit = (editItem) => {
         console.log('close edit')
         //e.preventDefault()
         setEditStatus(false)
         setValue('')
+        if(editItem.isNew){
+            onFileDelete(editItem.id)
+        }
     }
 
     useEffect(()=>{
@@ -33,21 +36,31 @@ const FileList = ( { files, onFileClick, onSaveEdit, onFileDelete }) => {
         // return () => { 
         //     document.removeEventListener('keyup', handleInputEvent)
         // }
-        if(enterPressed && editStatus){
-            const editItem = files.find(file => file.id === editStatus)
+        const editItem = files.find(file => file.id === editStatus)
+        if(enterPressed && editStatus && value.trim() !== '' ){
             onSaveEdit(editItem.id,value)
+            setEditStatus(false)
+            closeEdit(editItem)
         }
         if(escPressed && editStatus){
-            closeEdit()
+            closeEdit(editItem)
         }
     })
+
+    useEffect(()=>{
+        const newFile = files.find(p=>p.isNew)
+        if(newFile){
+            setEditStatus(newFile.id)
+            setValue(newFile.title)
+        }
+    },[files])
 
     return (
         <ul className="list-group list-group-flush file-list">
             {
                 files.map( file => (
                     <li className="list-group-item bg-light row d-flex align-items-center file-item mx-0" key={file.id}>
-                        { (file.id !== editStatus) &&
+                        { ((file.id !== editStatus) && !file.isNew) &&
                         <>
                             <span className="col-2"><FontAwesomeIcon icon={faMarkdown} size="lg" ></FontAwesomeIcon></span>
                             <span className="col-6 c-link" onClick={ () => { onFileClick(file.id) } }>{file.title}</span>
@@ -67,18 +80,19 @@ const FileList = ( { files, onFileClick, onSaveEdit, onFileDelete }) => {
                             </button>
                         </>
                          }
-                         { (file.id === editStatus) &&
+                         { ((file.id === editStatus) || file.isNew) &&
                             <>
                                 <input
                                     className="form-control col-10"
                                     value={value}
+                                    placeholder="请输入文件名称..."
                                     onChange={ (e)=>{ setValue(e.target.value) } }
                                 >
                                 </input>
                                 <button 
                                     type="button" 
                                     className="icon-button col-2"
-                                    onClick={ closeEdit }
+                                    onClick={ ()=> { closeEdit(file) } }
                                 >
                                     <FontAwesomeIcon icon={faTimes} title="关闭" size="lg" ></FontAwesomeIcon>
                                 </button>
