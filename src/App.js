@@ -13,6 +13,10 @@ import "easymde/dist/easymde.min.css";
 import { useState } from 'react';
 import uuidv4 from 'uuid/dist/v4'
 import { flattenArr,objToArr } from './utils/helper'
+import fileHelper from './utils/fileHelper'
+
+const { join } = window.require('path')
+const { remote } = window.require('electron')
 
 function App() {
 
@@ -25,6 +29,7 @@ function App() {
   //arr
   const filesArr = objToArr(files)
 
+  const saveLocation = remote.app.getPath('documents')
 
   const fileClick = (fileID) => {
     //set current active file
@@ -67,15 +72,23 @@ function App() {
     tabClose(id)
   }
 
-  const updateFileName = (id,title) => {
+  const updateFileName = (id,title,isNew) => {
     const modifiedFile = { ...files[id], title, isNew: false }
-    setFiles({...files,[id]: modifiedFile })
+    if(isNew){
+      fileHelper.writeFile(join(saveLocation,`${title}.md`), files[id].body).then(()=>{
+        setFiles({...files,[id]: modifiedFile })
+      })
+    }else{
+      fileHelper.renameFile(join(saveLocation,`${files[id].title}.md`),join(saveLocation,`${title}.md`)).then(()=>{
+        setFiles({...files,[id]: modifiedFile })
+      }) 
+    }
   }
 
   const fileSearch = (keyWord) => {
       const newFiles = filesArr.filter(p=>p.title.includes(keyWord))
       setSearchedFiles(newFiles)
-  }
+  } 
 
   const createNewFile = () => {
     const newID = uuidv4()
@@ -94,10 +107,13 @@ function App() {
       id: newID,
       title: '',
       body: '## 请输出 Markdown',
-      createAt: new Date().getTime(),
       isNew: true,
+      createAt: new Date().getTime()
     }
-    setFiles({ ...files, [newID] : newFile })
+    const newFiles = { ...files, [newID] : newFile }
+    console.log(newFiles)
+    setFiles(newFiles)
+    console.log(files)
   }
 
   const activeFile = files[activeFileID]
